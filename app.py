@@ -13,16 +13,19 @@ from datetime import timedelta
 from ai_predictor import predict_performance, get_study_suggestions
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.secret_key = 'edutrack_secret_key_change_in_production'
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-change-me')
 app.permanent_session_lifetime = timedelta(days=7)
 CORS(app, supports_credentials=True)
 
 # ── DATABASE CONFIG ──────────────────────────────────────────────────────────
+# Values come from environment variables (set them on Render).
+# Locally, if nothing is set, it falls back to your local MySQL.
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '123456',
-    'database': 'edutrack_db',
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'port': int(os.environ.get('DB_PORT', 3306)),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'edutrack_db'),
     'charset': 'utf8mb4'
 }
 

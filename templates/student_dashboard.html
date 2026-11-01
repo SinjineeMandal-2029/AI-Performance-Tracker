@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard — EduTrack AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🎓</div>
+    <div class="nav-brand-name">Edu<span>Track</span> AI</div>
+    <span class="nav-role-badge role-student">Student</span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">A</div>
+      <div class="nav-user-info">
+        <span class="nav-user-name" id="navName">Loading...</span>
+        <span class="nav-user-sub" id="navEmail"></span>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Log out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>Good morning, <span id="welcomeName">Student</span> 👋</h2>
+      <p>Here's your academic snapshot for today. Keep up the great work!</p>
+    </div>
+    <div class="welcome-emoji">📚</div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-gold">📊</div>
+      <div class="stat-label">Current GPA</div>
+      <div class="stat-value" id="statGpa">—</div>
+      <div class="stat-change up" id="statGpaChange">↑ Loading...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-steel">📅</div>
+      <div class="stat-label">Attendance</div>
+      <div class="stat-value" id="statAttend">—</div>
+      <div class="stat-change" id="statAttendChange">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-rose">📝</div>
+      <div class="stat-label">Pending Tasks</div>
+      <div class="stat-value" id="statPending">—</div>
+      <div class="stat-change" id="statPendingChange">Loading...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-navy">🎯</div>
+      <div class="stat-label">Tests This Week</div>
+      <div class="stat-value" id="statTests">—</div>
+      <div class="stat-change" id="statTestsChange">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Row 1: AI Prediction + Subjects -->
+  <div class="content-grid" style="margin-bottom:18px;">
+
+    <!-- AI Prediction Card -->
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <span class="ai-badge">✦ AI Prediction</span>
+        <span class="ai-title">End-of-Semester Forecast</span>
+      </div>
+      <div class="ai-predicted"><span>Predicted GPA: </span><span id="aiGpa">—</span></div>
+      <div style="font-size:12px; color:var(--steel); margin-bottom:8px;">
+        Confidence: <strong style="color:var(--gold)" id="aiConf">—</strong>
+      </div>
+      <div class="ai-suggestions" id="aiSuggestions">
+        <div class="ai-suggestion">
+          <div class="ai-suggestion-dot"></div>
+          <span>Loading AI analysis...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subject Performance -->
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Subject Performance</div>
+          <div class="section-sub">Current scores across subjects</div>
+        </div>
+      </div>
+      <div id="subjectBars">
+        <div style="color:var(--steel); font-size:13px;">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Grade Trend + Attendance -->
+  <div class="content-grid" style="margin-bottom:18px;">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Grade Trend</div>
+          <div class="section-sub">Quiz & test scores over time</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="gradeChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Attendance — This Month</div>
+          <div class="section-sub" id="attendSummary">Loading...</div>
+        </div>
+      </div>
+      <div class="attend-grid" id="attendGrid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Assignments Table + Study Recommendations -->
+  <div class="content-grid" style="margin-bottom:18px;">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Assignments & Deadlines</div>
+          <div class="section-sub">Your pending & recent submissions</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="switchAssignTab('pending', this)">Pending</div>
+        <div class="tab-item" onclick="switchAssignTab('submitted', this)">Submitted</div>
+      </div>
+      <table class="data-table" id="assignTable">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Subject</th>
+            <th>Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="assignBody">
+          <tr><td colspan="4" style="color:var(--steel);">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Study Recommendations</div>
+          <div class="section-sub">AI-suggested focus areas</div>
+        </div>
+      </div>
+      <div id="studyRecs" style="display:flex; flex-direction:column; gap:12px; margin-top:4px;">
+        <div style="color:var(--steel); font-size:13px;">Loading recommendations...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quizzes & Tests -->
+  <div class="card" style="margin-bottom:18px;">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Recent Quizzes & Tests</div>
+        <div class="section-sub">Performance in recent evaluations</div>
+      </div>
+    </div>
+    <table class="data-table" id="quizTable">
+      <thead>
+        <tr>
+          <th>Evaluation</th>
+          <th>Subject</th>
+          <th>Type</th>
+          <th>Score</th>
+          <th>Date</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody id="quizBody">
+        <tr><td colspan="6" style="color:var(--steel);">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+let gradeChart;
+
+async function loadStudentDashboard() {
+    try {
+        // 1) Get logged-in user info
+        const userRes = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
+
+        const user = await userRes.json();
+
+        if (!user.success) {
+            window.location.href = "/";
+            return;
+        }
+
+        // ===== TOP NAVBAR =====
+        document.getElementById('navName').textContent = user.name;
+        document.getElementById('navEmail').textContent = user.email;
+        document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+        // ===== WELCOME =====
+        const firstName = user.name.split(" ")[0];
+        document.getElementById('welcomeName').textContent = firstName;
+
+        // 2) Load dashboard data
+        const dashRes = await fetch('/api/student/dashboard', {
+            credentials: 'include'
+        });
+
+        const data = await dashRes.json();
+
+        if (!data.success) return;
+
+        // ===== STATS =====
+        document.getElementById('statGpa').textContent = data.stats.gpa;
+        document.getElementById('statAttend').textContent = data.stats.attendance_pct;
+        document.getElementById('statPending').textContent = data.stats.pending_assignments;
+        document.getElementById('statTests').textContent = data.grades.length;
+
+        document.getElementById('statGpaChange').textContent = "↑ AI updated";
+        document.getElementById('statAttendChange').textContent = "Live attendance";
+        document.getElementById('statPendingChange').textContent = "Assignments due";
+        document.getElementById('statTestsChange').textContent = "Recent tests";
+
+        // ===== AI CARD =====
+        document.getElementById('aiGpa').textContent =
+            data.predictions.predicted_gpa || data.stats.gpa;
+
+        document.getElementById('aiConf').textContent =
+            (data.predictions.confidence || 85) + "%";
+
+        const aiBox = document.getElementById('aiSuggestions');
+        aiBox.innerHTML = "";
+
+        (data.suggestions || []).forEach(item => {
+          aiBox.innerHTML += `
+            <div class="ai-suggestion">
+             <div class="ai-suggestion-dot"></div>
+              <span>${item.suggestion || item}</span>
+         </div>
+    `;
+});
+
+        // ===== SUBJECT PERFORMANCE =====
+        const subjectBox = document.getElementById('subjectBars');
+        subjectBox.innerHTML = "";
+
+        const subjectScores = {};
+
+        data.grades.forEach(g => {
+            const score = (g.marks_obtained / g.max_marks) * 100;
+            if (!subjectScores[g.subject]) subjectScores[g.subject] = [];
+            subjectScores[g.subject].push(score);
+        });
+
+        Object.keys(subjectScores).forEach(subject => {
+            const avg = Math.round(
+                subjectScores[subject].reduce((a, b) => a + b, 0) /
+                subjectScores[subject].length
+            );
+
+            subjectBox.innerHTML += `
+                <div style="margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; font-size:14px;">
+                        <span>${subject}</span>
+                        <strong>${avg}%</strong>
+                    </div>
+                    <div style="height:8px; background:#dfe9ee; border-radius:8px; overflow:hidden;">
+                        <div style="width:${avg}%; height:100%; background:#272838;"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // ===== ASSIGNMENTS =====
+        const assignBody = document.getElementById('assignBody');
+        assignBody.innerHTML = "";
+
+        data.assignments.forEach(a => {
+          
+            assignBody.innerHTML += `
+                <tr>
+                    <td>${a.title}</td>
+                    <td>${a.subject}</td>
+                    <td>${a.due_date}</td>
+                    <td>${a.status}</td>
+                </tr>
+            `;
+        });
+        // ===== ATTENDANCE GRID =====
+const attendGrid = document.getElementById('attendGrid');
+const attendSummary = document.getElementById('attendSummary');
+attendGrid.innerHTML = "";
+
+if (data.attendance.length > 0) {
+    const total = data.attendance.reduce((sum, a) => sum + a.total, 0);
+    const present = data.attendance.reduce((sum, a) => sum + a.present, 0);
+    attendSummary.textContent = `${present}/${total} classes attended`;
+
+    data.attendance.forEach(a => {
+        const percent = Math.round((a.present / a.total) * 100);
+
+        attendGrid.innerHTML += `
+            <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>${a.subject}</span>
+                    <strong>${percent}%</strong>
+                </div>
+                <div style="height:8px; background:#dfe9ee; border-radius:8px;">
+                    <div style="width:${percent}%; height:100%; background:#F2B418; border-radius:8px;"></div>
+                </div>
+            </div>
+        `;
+    });
+  }
+
+const studyRecs = document.getElementById('studyRecs');
+studyRecs.innerHTML = "";
+
+(data.suggestions || []).forEach(rec => {
+    studyRecs.innerHTML += `
+        <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">
+            <div style="
+                width:8px;
+                height:8px;
+                background:#F2B418;
+                border-radius:50%;
+                margin-top:6px;
+                flex-shrink:0;
+            "></div>
+            <span style="
+                color:#272838;
+                font-size:14px;
+                line-height:1.6;
+            ">
+                ${rec.suggestion || rec}
+            </span>
+        </div>
+    `;
+});
+
+        // ===== QUIZ TABLE =====
+        const quizBody = document.getElementById('quizBody');
+        quizBody.innerHTML = "";
+
+        data.grades.forEach(g => {
+            const pct = Math.round((g.marks_obtained / g.max_marks) * 100);
+            const result = pct >= 40 ? "Pass" : "Needs Work";
+
+            quizBody.innerHTML += `
+                <tr>
+                    <td>${g.exam_type}</td>
+                    <td>${g.subject}</td>
+                    <td>${g.exam_type}</td>
+                    <td>${g.marks_obtained}/${g.max_marks}</td>
+                    <td>${g.date}</td>
+                    <td>${result}</td>
+                </tr>
+            `;
+        });
+
+        // ===== CHART =====
+        const ctx = document.getElementById('gradeChart');
+
+        if (gradeChart) gradeChart.destroy();
+
+        gradeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.grades.map(g => g.subject),
+                datasets: [{
+                    label: 'Marks %',
+                    data: data.grades.map(g =>
+                        ((g.marks_obtained / g.max_marks) * 100).toFixed(1)
+                    ),
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+    } catch (error) {
+        console.error("Dashboard load failed:", error);
+    }
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+    });
+    window.location.href = "/";
+}
+
+window.onload = loadStudentDashboard;
+</script>
+</body>
+</html>
